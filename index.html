@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Giunti — Registro comunicazioni</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{
+    --navy:#16233d;
+    --steel:#2c4870;
+    --paper:#f4f1e9;
+    --paper-2:#eae5d8;
+    --ink:#20242b;
+    --ink-soft:#5b6270;
+    --line:#c9c2ae;
+    --red:#a5332a;
+    --green:#2f6b45;
+    --amber:#a8711f;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--navy);
+    background-image:
+      radial-gradient(circle at 15% 0%, #1d2f52 0%, transparent 45%),
+      radial-gradient(circle at 85% 100%, #1d2f52 0%, transparent 45%);
+    font-family:'IBM Plex Sans', sans-serif;
+    color:var(--ink);
+    min-height:100vh;
+    padding:28px 16px 60px;
+  }
+  .wrap{max-width:880px;margin:0 auto;}
+
+  header.top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    padding:0 6px 22px;
+    color:#eef0f4;
+  }
+  .brand{display:flex;align-items:center;gap:12px;}
+  .brand-mark{
+    width:40px;height:40px;border-radius:4px;
+    background:linear-gradient(160deg,#c94f3e,#a5332a);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'IBM Plex Mono',monospace;font-weight:600;color:#fff;font-size:13px;
+    box-shadow:0 2px 0 rgba(0,0,0,.25);
+    flex-shrink:0;
+  }
+  .brand h1{font-size:19px;margin:0;font-weight:600;letter-spacing:.2px;}
+  .brand .sub{font-size:12px;color:#a9b2c4;font-family:'IBM Plex Mono',monospace;margin-top:2px;}
+  .op-pill{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;
+    background:rgba(255,255,255,.07);
+    border:1px solid rgba(255,255,255,.16);
+    color:#dfe3ea;
+    padding:8px 12px;border-radius:20px;
+    display:flex;align-items:center;gap:8px;
+    cursor:pointer;
+    transition:background .15s;
+  }
+  .op-pill:hover{background:rgba(255,255,255,.13);}
+  .op-pill .dot{width:6px;height:6px;border-radius:50%;background:#5fbf7f;}
+
+  .sheet{
+    background:var(--paper);
+    border-radius:6px;
+    box-shadow:0 18px 40px rgba(0,0,0,.35);
+    overflow:hidden;
+    border:1px solid #d8d2c0;
+  }
+  .sheet-head{
+    background:var(--steel);
+    color:#fff;
+    padding:16px 24px;
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .sheet-head .label{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;opacity:.75;}
+  .sheet-head .meta{font-family:'IBM Plex Mono',monospace;font-size:13px;display:flex;gap:18px;}
+  .sheet-head .meta b{font-weight:600;}
+
+  form{padding:22px 24px 8px;}
+
+  .row{display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap;}
+  .field{flex:1 1 160px;min-width:140px;}
+  .field.grow2{flex-grow:2;}
+  .field label{
+    display:block;font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;letter-spacing:1px;text-transform:uppercase;
+    color:var(--ink-soft);margin-bottom:5px;
+  }
+  .field input[type=text],
+  .field input[type=number],
+  .field select{
+    width:100%;
+    padding:9px 10px;
+    border:1px solid var(--line);
+    border-radius:3px;
+    background:#fff;
+    font-family:'IBM Plex Sans',sans-serif;
+    font-size:14.5px;
+    color:var(--ink);
+  }
+  .field input:focus, .field select:focus{
+    outline:2px solid var(--steel);
+    outline-offset:1px;
+  }
+  .field .readonly{
+    padding:9px 10px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:14.5px;
+    background:var(--paper-2);
+    border:1px dashed var(--line);
+    border-radius:3px;
+    color:var(--ink-soft);
+  }
+  .field.required label::after{content:" *";color:var(--red);}
+
+  .divider{
+    border:none;border-top:1px dashed var(--line);
+    margin:6px 0 20px;
+  }
+  .section-title{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;letter-spacing:1.2px;text-transform:uppercase;
+    color:var(--ink-soft);margin:0 0 12px;
+  }
+
+  .checks{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;}
+  .chk{
+    display:flex;align-items:center;gap:8px;
+    border:1px solid var(--line);
+    background:#fff;
+    padding:9px 12px;border-radius:3px;
+    font-size:13.5px;cursor:pointer;
+    flex:1 1 220px;
+    transition:border-color .12s, background .12s;
+  }
+  .chk:has(input:checked){border-color:var(--steel);background:#eaf0f7;}
+  .chk.danger:has(input:checked){border-color:var(--red);background:#f8ecea;}
+  .chk input{width:16px;height:16px;flex-shrink:0;accent-color:var(--steel);}
+  .chk.danger input{accent-color:var(--red);}
+
+  .preview{
+    background:#fffdf7;
+    border:1px solid var(--line);
+    border-radius:3px;
+    padding:16px 18px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;
+    line-height:1.7;
+    white-space:pre-wrap;
+    color:#33322c;
+    position:relative;
+    margin-bottom:22px;
+  }
+  .preview::before{
+    content:"ANTEPRIMA VERBALE";
+    position:absolute;top:-9px;left:12px;
+    background:var(--paper);
+    padding:0 8px;
+    font-size:10px;letter-spacing:1.5px;
+    color:var(--ink-soft);
+  }
+
+  .actions{
+    display:flex;gap:12px;flex-wrap:wrap;
+    padding:2px 0 22px;
+    align-items:center;
+  }
+  button{
+    font-family:'IBM Plex Sans',sans-serif;
+    font-size:14px;font-weight:600;
+    border:none;border-radius:3px;
+    padding:11px 20px;
+    cursor:pointer;
+    transition:filter .12s, transform .05s;
+  }
+  button:active{transform:translateY(1px);}
+  .btn-primary{background:var(--green);color:#fff;}
+  .btn-primary:hover{filter:brightness(1.08);}
+  .btn-secondary{background:transparent;color:var(--steel);border:1px solid var(--steel);}
+  .btn-secondary:hover{background:#eaf0f7;}
+  .btn-ghost{background:transparent;color:var(--ink-soft);border:1px solid var(--line);}
+  .btn-ghost:hover{background:var(--paper-2);}
+  .hint{font-size:12px;color:var(--ink-soft);margin-left:auto;font-family:'IBM Plex Mono',monospace;}
+
+  .list-wrap{margin-top:22px;}
+  .list-head{
+    display:flex;justify-content:space-between;align-items:center;
+    color:#eef0f4;padding:0 6px 12px;
+  }
+  .list-head h2{font-size:15px;margin:0;font-weight:600;}
+  .list-head .count{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#a9b2c4;}
+
+  .list-toolbar{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+    background:rgba(255,255,255,.07);
+    border:1px solid rgba(255,255,255,.16);
+    border-radius:5px;
+    padding:10px 14px;margin:0 0 12px;
+  }
+  .list-toolbar label{
+    display:flex;align-items:center;gap:8px;
+    font-size:13px;font-family:'IBM Plex Mono',monospace;
+    color:#dfe3ea;cursor:pointer;
+  }
+  .list-toolbar input[type=checkbox]{width:16px;height:16px;accent-color:#5fbf7f;cursor:pointer;}
+  .list-toolbar button{padding:8px 14px;font-size:13px;}
+
+  .record{
+    background:var(--paper);
+    border:1px solid #d8d2c0;
+    border-radius:5px;
+    padding:14px 18px;
+    margin-bottom:10px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:14px;
+    flex-wrap:wrap;
+  }
+  .record .rcheck{flex:0 0 auto;display:flex;}
+  .record .rcheck input{width:17px;height:17px;accent-color:var(--steel);cursor:pointer;}
+  .record .rbody{flex:1 1 240px;}
+  .record .rmeta{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ink-soft);}
+  .record .rtitle{font-size:14.5px;font-weight:600;margin-bottom:3px;}
+  .record .ractions{display:flex;gap:8px;}
+  .record .ractions button{padding:7px 12px;font-size:12.5px;}
+  .empty{
+    color:#a9b2c4;font-family:'IBM Plex Mono',monospace;font-size:13px;
+    padding:18px 6px;text-align:center;
+  }
+
+  .modal-bg{
+    position:fixed;inset:0;background:rgba(10,15,25,.55);
+    display:none;align-items:center;justify-content:center;z-index:50;padding:20px;
+  }
+  .modal-bg.show{display:flex;}
+  .modal{
+    background:var(--paper);border-radius:6px;padding:22px;max-width:360px;width:100%;
+    box-shadow:0 20px 50px rgba(0,0,0,.4);
+  }
+  .modal h3{margin:0 0 6px;font-size:16px;}
+  .modal p{margin:0 0 14px;font-size:13px;color:var(--ink-soft);}
+  .modal input{width:100%;padding:10px;border:1px solid var(--line);border-radius:3px;font-size:14px;margin-bottom:14px;font-family:'IBM Plex Sans',sans-serif;}
+  .modal .mrow{display:flex;gap:10px;justify-content:flex-end;}
+
+  .toast{
+    position:fixed;bottom:22px;left:50%;transform:translateX(-50%);
+    background:var(--ink);color:#fff;padding:11px 18px;border-radius:4px;
+    font-size:13.5px;box-shadow:0 8px 24px rgba(0,0,0,.3);
+    opacity:0;pointer-events:none;transition:opacity .2s, transform .2s;
+    z-index:60;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(-4px);}
+
+  @media (max-width:520px){
+    .sheet-head{flex-direction:column;align-items:flex-start;}
+    .actions{flex-direction:column;align-items:stretch;}
+    .hint{margin-left:0;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand">
+      <div class="brand-mark">GT</div>
+      <div>
+        <h1>Giunti</h1>
+        <div class="sub">Registro comunicazioni di giunto treni</div>
+      </div>
+    </div>
+    <div class="op-pill" id="opPill" title="Firma operatore (PDC)">
+      <span class="dot"></span>
+      <span id="opPillText">PDC: —</span>
+    </div>
+  </header>
+
+  <div class="sheet">
+    <div class="sheet-head">
+      <div>
+        <div class="label">Verbale</div>
+        <div style="font-size:17px;font-weight:600;">Nuova comunicazione</div>
+      </div>
+      <div class="meta">
+        <div><span style="opacity:.7">N.</span> <b id="progDisplay">—</b>/<b id="saltDisplay">—</b></div>
+        <div><span style="opacity:.7">Data</span> <b id="dateDisplay">—</b></div>
+      </div>
+    </div>
+
+    <form id="giuntoForm" onsubmit="return false;">
+
+      <div class="row">
+        <div class="field">
+          <label>Dirigente</label>
+          <select id="dcoDm">
+            <option value="DCO">DCO</option>
+            <option value="DM">DM</option>
+          </select>
+        </div>
+        <div class="field grow2">
+          <label>Sede</label>
+          <input type="text" id="stazioneDco" value="Mestre">
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <div class="row">
+        <div class="field required">
+          <label>Treno</label>
+          <input type="text" id="trNum" placeholder="n° treno" inputmode="numeric">
+        </div>
+        <div class="field grow2">
+          <label>Giunto a</label>
+          <select id="giuntoA">
+            <option value="">— seleziona —</option>
+            <option value="SACILE">SACILE</option>
+            <option value="MANIAGO">MANIAGO</option>
+            <option value="CARNIA">CARNIA</option>
+            <option value="altro">Altro…</option>
+          </select>
+        </div>
+        <div class="field" id="stazioneAltroWrap" style="display:none;">
+          <label>Stazione</label>
+          <input type="text" id="stazioneAltro" placeholder="nome stazione">
+        </div>
+        <div class="field">
+          <label>Binario</label>
+          <input type="text" id="binario" placeholder="n° bin.">
+        </div>
+      </div>
+
+      <div class="checks">
+        <label class="chk"><input type="checkbox" id="chkSX"> Proveniente da bin. di SX</label>
+        <label class="chk"><input type="checkbox" id="chkDX"> Proveniente da bin. di DX</label>
+        <label class="chk"><input type="checkbox" id="chkRAR"> Azionata maniglia RAR (treno incrociante)</label>
+        <label class="chk danger"><input type="checkbox" id="chkPL"> Sede stradale PL KM. 65+070 libera da rotabili</label>
+      </div>
+
+      <hr class="divider">
+      <p class="section-title">Dati DCO</p>
+
+      <div class="row">
+        <div class="field">
+          <label>Progressivo DCO</label>
+          <input type="text" id="progDco" inputmode="numeric" placeholder="n°">
+        </div>
+        <div class="field">
+          <label>Saltuario DCO</label>
+          <input type="text" id="saltDco" inputmode="numeric" placeholder="n°">
+        </div>
+        <div class="field grow2">
+          <label>Firma DCO/DM</label>
+          <input type="text" id="firmaDco" placeholder="firma">
+        </div>
+      </div>
+
+      <div class="preview" id="preview">—</div>
+
+      <div class="actions">
+        <button type="button" class="btn-primary" id="btnSalva">Salva verbale</button>
+        <button type="button" class="btn-secondary" id="btnReset">Pulisci campi</button>
+        <span class="hint">i verbali salvati finiscono in "Elenco salvati" qui sotto, da cui li esporti quando vuoi</span>
+      </div>
+    </form>
+  </div>
+
+  <div class="list-wrap">
+    <div class="list-head">
+      <h2>Elenco salvati</h2>
+      <span class="count" id="listCount">0 verbali</span>
+    </div>
+    <div class="list-toolbar" id="listToolbar" style="display:none;">
+      <label><input type="checkbox" id="selectAll"> Seleziona tutti</label>
+      <button type="button" class="btn-primary" id="btnExportSelected">Esporta selezionati in un unico PDF</button>
+    </div>
+    <div id="recordList"></div>
+  </div>
+
+</div>
+
+<div class="modal-bg" id="firmaModalBg">
+  <div class="modal">
+    <h3>Firma operatore (PDC)</h3>
+    <p>Questa firma viene salvata sul dispositivo e riportata su ogni PDF come "PDC:".</p>
+    <input type="text" id="firmaOperatoreInput" placeholder="Es. M. Rossi">
+    <div class="mrow">
+      <button type="button" class="btn-ghost" id="firmaCancel">Annulla</button>
+      <button type="button" class="btn-primary" id="firmaSave">Salva</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const { jsPDF } = window.jspdf;
+
+const STORAGE = {
+  async get(key){ try{ const r = await window.storage.get(key,false); return r ? JSON.parse(r.value) : null; }catch(e){ return null; } },
+  async set(key,val){ try{ await window.storage.set(key, JSON.stringify(val), false); }catch(e){ console.error(e); } },
+  async del(key){ try{ await window.storage.delete(key,false); }catch(e){} },
+  async list(prefix){ try{ const r = await window.storage.list(prefix,false); return r ? r.keys : []; }catch(e){ return []; } }
+};
+
+let state = {
+  progressivo: 1,
+  saltuario: rand2(),
+  operatoreFirma: '',
+  index: []
+};
+
+function rand2(){ return Math.floor(Math.random()*99)+1; }
+function pad(n){ return n.toString().padStart(2,'0'); }
+function todayStr(){
+  const d = new Date();
+  return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()}`;
+}
+function todayStrForFile(){
+  const d = new Date();
+  return `${pad(d.getDate())}-${pad(d.getMonth()+1)}-${d.getFullYear()}`;
+}
+function esc(s){ return (s||'').toString(); }
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+// --- Elements ---
+const el = id => document.getElementById(id);
+const dcoDm = el('dcoDm'), stazioneDco = el('stazioneDco'), trNum = el('trNum'),
+      giuntoA = el('giuntoA'), stazioneAltroWrap = el('stazioneAltroWrap'), stazioneAltro = el('stazioneAltro'),
+      binario = el('binario'), chkSX = el('chkSX'), chkDX = el('chkDX'), chkRAR = el('chkRAR'), chkPL = el('chkPL'),
+      progDco = el('progDco'), saltDco = el('saltDco'), firmaDco = el('firmaDco'),
+      preview = el('preview'), progDisplay = el('progDisplay'), saltDisplay = el('saltDisplay'), dateDisplay = el('dateDisplay'),
+      opPillText = el('opPillText');
+
+giuntoA.addEventListener('change', ()=>{
+  stazioneAltroWrap.style.display = giuntoA.value === 'altro' ? 'block' : 'none';
+  updatePreview();
+});
+chkSX.addEventListener('change', ()=>{ if(chkSX.checked) chkDX.checked=false; updatePreview(); });
+chkDX.addEventListener('change', ()=>{ if(chkDX.checked) chkSX.checked=false; updatePreview(); });
+[dcoDm,stazioneDco,trNum,stazioneAltro,binario,chkRAR,chkPL,progDco,saltDco,firmaDco].forEach(e=>{
+  e.addEventListener('input', updatePreview);
+  e.addEventListener('change', updatePreview);
+});
+
+function stazioneDestinazione(){
+  return giuntoA.value === 'altro' ? (stazioneAltro.value||'') : (giuntoA.value||'');
+}
+
+function buildTOT(){
+  let tot = '';
+  if(chkSX.checked) tot = 'Proveniente dal binario di SX, ';
+  else if(chkDX.checked) tot = 'Proveniente dal binario di DX, ';
+  if(chkRAR.checked) tot += (tot? '\n':'') + 'Azionata maniglia RAR per treno incrociante.';
+  if(chkPL.checked) tot += (tot? '\n':'') + 'Sede Stradale PL KM. 65+070 Libera da rotabili. ';
+  return tot;
+}
+
+function buildText(){
+  const data = todayStr();
+  const tot = buildTOT();
+  return `${data}  n° ${state.progressivo}/${state.saltuario},  \n`+
+         `${dcoDm.value} ${esc(stazioneDco.value)} Tr. ${esc(trNum.value)} giunto a ${esc(stazioneDestinazione())} in ${esc(binario.value)} bin.\n`+
+         `${tot}\n`+
+         `DCO n° ${esc(progDco.value)}/${esc(saltDco.value)}   ${esc(firmaDco.value)}\n`+
+         `PDC: ${esc(state.operatoreFirma)}`;
+}
+
+function updatePreview(){
+  preview.textContent = buildText();
+}
+
+// --- Firma operatore modal ---
+const firmaModalBg = el('firmaModalBg'), firmaOperatoreInput = el('firmaOperatoreInput');
+opPill.onclick = openFirmaModal;
+function openFirmaModal(){
+  firmaOperatoreInput.value = state.operatoreFirma || '';
+  firmaModalBg.classList.add('show');
+  setTimeout(()=>firmaOperatoreInput.focus(),50);
+}
+el('firmaCancel').onclick = ()=> firmaModalBg.classList.remove('show');
+el('firmaSave').onclick = async ()=>{
+  state.operatoreFirma = firmaOperatoreInput.value.trim();
+  await STORAGE.set('firma-operatore', state.operatoreFirma);
+  opPillText.textContent = 'PDC: ' + (state.operatoreFirma || '—');
+  firmaModalBg.classList.remove('show');
+  updatePreview();
+  showToast('Firma operatore aggiornata');
+};
+
+// --- Reset form (like reset() in the original app) ---
+function resetForm({keepCounters=true}={}){
+  trNum.value=''; binario.value='';
+  giuntoA.value=''; stazioneAltro.value=''; stazioneAltroWrap.style.display='none';
+  chkSX.checked=false; chkDX.checked=false; chkRAR.checked=false; chkPL.checked=false;
+  progDco.value=''; saltDco.value=''; firmaDco.value='';
+  dcoDm.value='DCO'; stazioneDco.value='Mestre';
+  state.saltuario = rand2();
+  refreshHeader();
+  updatePreview();
+}
+
+function refreshHeader(){
+  progDisplay.textContent = state.progressivo;
+  saltDisplay.textContent = state.saltuario;
+  dateDisplay.textContent = todayStr();
+}
+
+// --- PDF generation ---
+function generatePdf(text, filename){
+  const doc = new jsPDF({unit:'mm', format:'a4'});
+  doc.setFont('courier','normal');
+  doc.setFontSize(12);
+  const lines = doc.splitTextToSize(text, 170);
+  doc.text(lines, 20, 25);
+  doc.save(filename);
+}
+
+function buildFilename(){
+  return `${state.progressivo}_${todayStrForFile()}_giunto.pdf`;
+}
+
+function generateCombinedPdf(records, filename){
+  const doc = new jsPDF({unit:'mm', format:'a4'});
+  doc.setFont('courier','normal');
+  doc.setFontSize(12);
+  records.forEach((rec, i)=>{
+    if(i>0) doc.addPage();
+    const lines = doc.splitTextToSize(rec.text, 170);
+    doc.text(lines, 20, 25);
+  });
+  doc.save(filename);
+}
+
+// --- Save record ---
+el('btnSalva').onclick = async ()=>{
+  if(!trNum.value.trim()){ showToast('Inserire n° treno'); trNum.focus(); return; }
+  if(!state.operatoreFirma){
+    showToast('Imposta prima la firma operatore (PDC)');
+    openFirmaModal();
+    return;
+  }
+  const text = buildText();
+  const filename = buildFilename();
+
+  const record = {
+    id: 'rec_' + Date.now(),
+    progressivo: state.progressivo,
+    saltuario: state.saltuario,
+    data: todayStr(),
+    treno: trNum.value.trim(),
+    stazioneDestinazione: stazioneDestinazione(),
+    filename,
+    text,
+    savedAt: new Date().toISOString()
+  };
+  await STORAGE.set(record.id, record);
+  state.index.unshift(record.id);
+  await STORAGE.set('records-index', state.index);
+
+  state.progressivo += 1;
+  await STORAGE.set('progressivo', state.progressivo);
+
+  resetForm();
+  renderList();
+  showToast('Verbale salvato (n. ' + record.progressivo + ') — vedi Elenco salvati');
+};
+
+el('btnReset').onclick = ()=> resetForm();
+
+// --- Elenco salvati ---
+let selected = new Set();
+const listToolbar = el('listToolbar'), selectAll = el('selectAll'), btnExportSelected = el('btnExportSelected');
+
+async function renderList(){
+  const listEl = el('recordList');
+  const countEl = el('listCount');
+  // scarta dalla selezione eventuali id non più esistenti
+  selected = new Set([...selected].filter(id => state.index.includes(id)));
+
+  if(!state.index.length){
+    listEl.innerHTML = '<div class="empty">Nessun verbale salvato ancora.</div>';
+    countEl.textContent = '0 verbali';
+    listToolbar.style.display = 'none';
+    return;
+  }
+  listToolbar.style.display = 'flex';
+  countEl.textContent = state.index.length + (state.index.length===1 ? ' verbale' : ' verbali');
+  const items = await Promise.all(state.index.map(id=>STORAGE.get(id)));
+  listEl.innerHTML = '';
+  items.forEach((rec)=>{
+    if(!rec) return;
+    const div = document.createElement('div');
+    div.className = 'record';
+    div.innerHTML = `
+      <label class="rcheck"><input type="checkbox" class="recChk" data-id="${rec.id}" ${selected.has(rec.id)?'checked':''}></label>
+      <div class="rbody">
+        <div class="rtitle">Tr. ${escHtml(rec.treno)} → ${escHtml(rec.stazioneDestinazione||'—')}</div>
+        <div class="rmeta">N. ${rec.progressivo}/${rec.saltuario} · ${rec.data} · ${escHtml(rec.filename)}</div>
+      </div>
+      <div class="ractions">
+        <button class="btn-secondary" data-action="download" data-id="${rec.id}">Scarica di nuovo</button>
+        <button class="btn-ghost" data-action="delete" data-id="${rec.id}">Elimina</button>
+      </div>`;
+    listEl.appendChild(div);
+  });
+  listEl.querySelectorAll('input.recChk').forEach(chk=>{
+    chk.onchange = ()=>{
+      const id = chk.dataset.id;
+      if(chk.checked) selected.add(id); else selected.delete(id);
+      selectAll.checked = selected.size === state.index.length;
+    };
+  });
+  listEl.querySelectorAll('button[data-action="download"]').forEach(btn=>{
+    btn.onclick = async ()=>{
+      const rec = await STORAGE.get(btn.dataset.id);
+      if(rec) generatePdf(rec.text, rec.filename);
+    };
+  });
+  listEl.querySelectorAll('button[data-action="delete"]').forEach(btn=>{
+    btn.onclick = async ()=>{
+      const id = btn.dataset.id;
+      await STORAGE.del(id);
+      state.index = state.index.filter(x=>x!==id);
+      selected.delete(id);
+      await STORAGE.set('records-index', state.index);
+      renderList();
+      showToast('Verbale eliminato');
+    };
+  });
+  selectAll.checked = selected.size === state.index.length;
+}
+
+selectAll.onchange = ()=>{
+  if(selectAll.checked) selected = new Set(state.index);
+  else selected = new Set();
+  renderList();
+};
+
+btnExportSelected.onclick = async ()=>{
+  if(!selected.size){ showToast('Seleziona almeno un verbale'); return; }
+  const items = (await Promise.all([...selected].map(id=>STORAGE.get(id)))).filter(Boolean);
+  items.sort((a,b)=> a.progressivo - b.progressivo);
+  const filename = `verbali_combinati_${todayStrForFile()}.pdf`;
+  generateCombinedPdf(items, filename);
+  showToast(items.length + ' verbali esportati in un unico PDF');
+
+  const rimuovi = window.confirm('PDF combinato generato (' + items.length + ' verbali).\n\nVuoi rimuovere questi verbali dall\'elenco salvati?');
+  if(rimuovi){
+    for(const rec of items){
+      await STORAGE.del(rec.id);
+    }
+    const idsToRemove = new Set(items.map(r=>r.id));
+    state.index = state.index.filter(id=>!idsToRemove.has(id));
+    selected = new Set();
+    await STORAGE.set('records-index', state.index);
+    renderList();
+  }
+};
+function escHtml(s){
+  return (s||'').toString().replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// --- Init ---
+(async function init(){
+  const p = await STORAGE.get('progressivo');
+  if(p) state.progressivo = p;
+  const f = await STORAGE.get('firma-operatore');
+  if(f) state.operatoreFirma = f;
+  const idx = await STORAGE.get('records-index');
+  if(idx) state.index = idx;
+
+  opPillText.textContent = 'PDC: ' + (state.operatoreFirma || '—');
+  refreshHeader();
+  updatePreview();
+  renderList();
+
+  if(!state.operatoreFirma){
+    setTimeout(openFirmaModal, 400);
+  }
+})();
+</script>
+</body>
+</html>
