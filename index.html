@@ -409,11 +409,33 @@
 <script>
 const { jsPDF } = window.jspdf;
 
+const PREFIX = 'giunti:';
 const STORAGE = {
-  async get(key){ try{ const r = await window.storage.get(key,false); return r ? JSON.parse(r.value) : null; }catch(e){ return null; } },
-  async set(key,val){ try{ await window.storage.set(key, JSON.stringify(val), false); }catch(e){ console.error(e); } },
-  async del(key){ try{ await window.storage.delete(key,false); }catch(e){} },
-  async list(prefix){ try{ const r = await window.storage.list(prefix,false); return r ? r.keys : []; }catch(e){ return []; } }
+  async get(key){
+    try{
+      const raw = localStorage.getItem(PREFIX+key);
+      return raw ? JSON.parse(raw) : null;
+    }catch(e){ console.error('storage.get', key, e); return null; }
+  },
+  async set(key,val){
+    try{
+      localStorage.setItem(PREFIX+key, JSON.stringify(val));
+      return true;
+    }catch(e){ console.error('storage.set', key, e); return false; }
+  },
+  async del(key){
+    try{ localStorage.removeItem(PREFIX+key); }catch(e){ console.error('storage.del', key, e); }
+  },
+  async list(prefix){
+    try{
+      const keys = [];
+      for(let i=0;i<localStorage.length;i++){
+        const k = localStorage.key(i);
+        if(k && k.indexOf(PREFIX+(prefix||'')) === 0) keys.push(k.slice(PREFIX.length));
+      }
+      return keys;
+    }catch(e){ console.error('storage.list', e); return []; }
+  }
 };
 
 let state = {
